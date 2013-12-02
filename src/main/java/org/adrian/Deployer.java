@@ -1,5 +1,6 @@
 package org.adrian;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -25,6 +26,9 @@ import com.amazonaws.services.elasticmapreduce.model.RunJobFlowResult;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.util.BootstrapActions;
 import com.amazonaws.services.elasticmapreduce.util.BootstrapActions.Daemon;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 
 public class Deployer {
     
@@ -52,11 +56,26 @@ public class Deployer {
                                             .withProxyPort(8080);
         
         AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);        
-        RunJobFlowRequest request = jobFlowRequest();
-        RunJobFlowResult result = service.runJobFlow(request);
+        
+        RunJobFlowResult result = service.runJobFlow(jobFlowRequest());
         
         waitForResult(service, result);
         
+        downloadResult(credentials, config);
+    }
+
+
+    private static void downloadResult(AWSCredentials credentials, ClientConfiguration config) {
+        String outputFile = "outputs/"+RANDOM_UUID.toString()+"/part-r-00000";
+        String local = "target/results.out";
+
+        AmazonS3 conn = new AmazonS3Client(credentials, config);
+        conn.getObject(
+                new GetObjectRequest("poobar", outputFile),
+                new File(local)
+        );
+        
+        System.out.println("Downloaded" + outputFile + " to " + local);
     }
 
 
