@@ -34,10 +34,10 @@ public class Deployer {
     private static final String jobFlowName = "WordCount-job-flow-" + new Date().toString();
     private static final String stepname = "Step" + System.currentTimeMillis();
     
+    private static final UUID RANDOM_UUID = UUID.randomUUID();
     private static final String mr_main_class = "org.adrian.WordCount";
     private static final String mr_cmdline_arg1 = "s3n://poobar/hamlet111.txt";
-    private static final UUID RANDOM_UUID = UUID.randomUUID();
-    private static final String mr_cmdline_arg2 = "poobar/outputs/"+RANDOM_UUID.toString() + "/";
+    private static final String mr_cmdline_arg2 = "s3://poobar/outputs/"+RANDOM_UUID.toString() + "/";
     
     private static final List<JobFlowExecutionState> DONE_STATES = Arrays
             .asList(new JobFlowExecutionState[] { JobFlowExecutionState.COMPLETED,
@@ -50,8 +50,8 @@ public class Deployer {
         ClientConfiguration config = new ClientConfiguration()
                                             .withProxyHost("surf-proxy.intranet.db.com")
                                             .withProxyPort(8080);
-        AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);
         
+        AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);        
         RunJobFlowRequest request = jobFlowRequest();
         RunJobFlowResult result = service.runJobFlow(request);
         
@@ -118,7 +118,7 @@ public class Deployer {
         JobFlowInstancesConfig conf = new JobFlowInstancesConfig()
             .withInstanceCount(3)
             .withHadoopVersion("0.20.205")
-            .withKeepJobFlowAliveWhenNoSteps(true)
+            .withKeepJobFlowAliveWhenNoSteps(false)
             .withMasterInstanceType("m1.small")
             .withPlacement(new PlacementType("us-east-1a"))
             .withSlaveInstanceType("m1.small");
@@ -136,7 +136,7 @@ public class Deployer {
     private static void waitForResult(AmazonElasticMapReduce service, RunJobFlowResult result) {
         String lastState = "";
         
-        do {
+        DONE: while(true) {
             DescribeJobFlowsResult descResult = service.describeJobFlows(describeResult(result));
             
             for (JobFlowDetail detail : descResult.getJobFlows()) {
@@ -144,7 +144,8 @@ public class Deployer {
                 
                 if (isDone(state)) {
                     System.out.println("Job " + state + ": " + detail.toString());
-                    break;
+                    System.out.println("Output folder: " + mr_cmdline_arg2);
+                    break DONE;
                 }
                 else if (!lastState.equals(state)) {
                     lastState = state;
@@ -153,7 +154,7 @@ public class Deployer {
             }
             
             pause();
-        } while (true);
+        } 
     }
     
 }
