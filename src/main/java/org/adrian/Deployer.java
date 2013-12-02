@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.ClientConfiguration;
@@ -11,6 +12,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
+import com.amazonaws.services.elasticmapreduce.model.BootstrapActionConfig;
 import com.amazonaws.services.elasticmapreduce.model.DescribeJobFlowsRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeJobFlowsResult;
 import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
@@ -21,18 +23,21 @@ import com.amazonaws.services.elasticmapreduce.model.PlacementType;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowResult;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.elasticmapreduce.util.BootstrapActions;
+import com.amazonaws.services.elasticmapreduce.util.BootstrapActions.Daemon;
 
 public class Deployer {
     
     private static final String s3_jar_file = "s3n://poobar/wordcount.jar";
     private static final String s3_log_folder = "s3n://poobar/logs";
     
-    private static final String jobFlowName = "Class-job-flow" + new Date().toString();
+    private static final String jobFlowName = "WordCount-job-flow-" + new Date().toString();
     private static final String stepname = "Step" + System.currentTimeMillis();
     
     private static final String mr_main_class = "org.adrian.WordCount";
     private static final String mr_cmdline_arg1 = "s3n://poobar/hamlet111.txt";
-    private static final String mr_cmdline_arg2 = "s3n://poobar/outputs/"+jobFlowName+"/"+stepname+"/";
+    private static final UUID RANDOM_UUID = UUID.randomUUID();
+    private static final String mr_cmdline_arg2 = "poobar/outputs/"+RANDOM_UUID.toString() + "/";
     
     private static final List<JobFlowExecutionState> DONE_STATES = Arrays
             .asList(new JobFlowExecutionState[] { JobFlowExecutionState.COMPLETED,
@@ -59,26 +64,23 @@ public class Deployer {
         return new DescribeJobFlowsRequest(Arrays.asList(new String[] { result.getJobFlowId() }));
     }
     
-    public static boolean isDone(String value)
-    {
+    public static boolean isDone(String value) {
         JobFlowExecutionState state = JobFlowExecutionState.fromValue(value);
         return DONE_STATES.contains(state);
     }
 
-    private static StepConfig stepConfig(final String stepname, HadoopJarStepConfig jarsetup) {
-        StepConfig stepConfig = new StepConfig();
-        stepConfig.setActionOnFailure("CANCEL_AND_WAIT");
-        stepConfig.setHadoopJarStep(jarsetup);
-        stepConfig.setName(stepname);
-        return stepConfig;
+    private static StepConfig stepConfig(final String stepname) {
+        return new StepConfig()
+            .withActionOnFailure("TERMINATE_JOB_FLOW")
+            .withHadoopJarStep(hadoopJarStepConfig(argumentsAsList(jobFlowName, stepname)))
+            .withName(stepname);
     }
 
-    private static HadoopJarStepConfig hadoopJarSetupConfig(List<String> arguments) {
-        HadoopJarStepConfig jarsetup = new HadoopJarStepConfig();
-        jarsetup.setArgs(arguments);
-        jarsetup.setJar(s3_jar_file);
-        jarsetup.setMainClass(mr_main_class);
-        return jarsetup;
+    private static HadoopJarStepConfig hadoopJarStepConfig(List<String> arguments) {
+        return new HadoopJarStepConfig()
+            .withArgs(arguments)
+            .withJar(s3_jar_file)
+            .withMainClass(mr_main_class);
     }
 
     private static List<String> argumentsAsList(final String jobFlowName, final String stepname) {
@@ -95,40 +97,46 @@ public class Deployer {
     }
 
     private static RunJobFlowRequest jobFlowRequest() {
-        
-        HadoopJarStepConfig jar = hadoopJarSetupConfig(argumentsAsList(jobFlowName, stepname));        
-        RunJobFlowRequest request = new RunJobFlowRequest();
-        request.setInstances(jobFlowInstance());
-        request.setLogUri(s3_log_folder);
-        request.setName(jobFlowName);
-        request.setSteps(asList(stepConfig(stepname, jar)));
-        
-        return request;
+        BootstrapActions bootstrapActions = new BootstrapActions();
+        return new RunJobFlowRequest()
+            .withName(jobFlowName)
+            .withBootstrapActions(bootstrapActions.newRunIf(
+               "instance.isMaster=true", action(bootstrapActions)))
+            .withInstances(jobFlowInstance())
+            .withLogUri(s3_log_folder)
+            .withSteps(asList(stepConfig(stepname)));
+    }
+
+
+    private static BootstrapActionConfig action(BootstrapActions bootstrapActions) {
+        return bootstrapActions.newConfigureDaemons()
+               .withHeapSize(Daemon.JobTracker, 2048)
+               .build();
     }
 
     private static JobFlowInstancesConfig jobFlowInstance() {
-        JobFlowInstancesConfig conf = new JobFlowInstancesConfig();
-        //conf.setEc2KeyName("class");
-        conf.setInstanceCount(5);
-        conf.setKeepJobFlowAliveWhenNoSteps(true);
-        conf.setMasterInstanceType("m1.small");
-        conf.setPlacement(new PlacementType("us-east-1a"));
-        conf.setSlaveInstanceType("m1.small");
+        JobFlowInstancesConfig conf = new JobFlowInstancesConfig()
+            .withInstanceCount(3)
+            .withHadoopVersion("0.20.205")
+            .withKeepJobFlowAliveWhenNoSteps(true)
+            .withMasterInstanceType("m1.small")
+            .withPlacement(new PlacementType("us-east-1a"))
+            .withSlaveInstanceType("m1.small");
         return conf;
     }
     
     private static void pause() {
         try {
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(3);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
     private static void waitForResult(AmazonElasticMapReduce service, RunJobFlowResult result) {
-        //Check the status of the running job
         String lastState = "";
-        STATUS_LOOP: while (true) {
+        
+        do {
             DescribeJobFlowsResult descResult = service.describeJobFlows(describeResult(result));
             
             for (JobFlowDetail detail : descResult.getJobFlows()) {
@@ -136,7 +144,7 @@ public class Deployer {
                 
                 if (isDone(state)) {
                     System.out.println("Job " + state + ": " + detail.toString());
-                    break STATUS_LOOP;
+                    break;
                 }
                 else if (!lastState.equals(state)) {
                     lastState = state;
@@ -145,7 +153,7 @@ public class Deployer {
             }
             
             pause();
-        }
+        } while (true);
     }
     
 }
