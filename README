@@ -1,0 +1,54 @@
+Prerequisities: 
+Wordcount Jar to be on S3 already, with a certain Main class (see implementation)
+Input text file uploaded to S3.
+EC2 key has been generated with name 'adrian'
+
+Output goes to S3 and can be seen in the Amazon UI.
+
+Remove s3:// protocol on output folder (second commandline arg) to write to HDFS instead
+
+Should we write to HDFS for better performance? since (I assume) the storage will be largely local.
+
+http://techblog.netflix.com/2013/01/hadoop-platform-as-service-in-cloud.html
+ "reading and writing from S3 can be slower than writing to HDFS. 
+ However, most queries and processes tend to be multi-stage MapReduce jobs, 
+ where mappers in the first stage read input data in parallel from S3, 
+ and reducers in the last stage write output data back to S3. 
+ HDFS and local storage are used for all intermediate and transient data, 
+ which reduces the performance overhead."
+
+However I haven't figured out how to access data in HDFS from Java.
+
+TODO
+run on lab and compare times to EMR
+run on HDFS and download data and compare times to S3
+what about other part files?
+reuse running instance (and start if not found)
+huge datavolume
+
+TRY THIS
+Start a new Amazon Elastic MapReduce Job Flow (it doesn't matter which one) from the Amazon Web Services console, and make sure that you keep the the job alive with the Keep Alive option
+Once the EC2 machines have started, find the instances on EC2 from the Amazon Web Services console
+ssh into one of the running EC2 instances, using the hadoop user, for example ssh -i keypair.pem hadoop@ec2-IPADDRESS.compute-1.amazonaws.com
+Obtain the files you need, using hadoop dfs -copyToLocal s3://elasticmapreduce/samples/wordcount/input/0002 .
+sftp the files to your local system
+
+
+
+
+PRESENTATION
+http://aws.amazon.com/elasticmapreduce/
+Amazon EMR pricing is per instance hour and starts at $.015 per instance hour for a small instance ($131.40 per year).
+
+STARTING 5 mins
+Cluster instances
+BOOTSTRAPPING 3 mins
+config Hadoop (core, site, hdfs, mapred, yarn), 
+config Daemons heap, GC (jobtracker, tasktracker, sn, dn)
+Run scripts e.g. install applications, e.g. spark shark,;   
+RUNNING 1 sec
+SHUTTING_DOWN 2 mins
+Configure shutdown action;
+COMPLETED
+
+S3 storage - available as if HDFS through s3://, done via hadoop config
