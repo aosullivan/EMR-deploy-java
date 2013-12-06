@@ -26,6 +26,7 @@ import com.amazonaws.services.elasticmapreduce.model.ScriptBootstrapActionConfig
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.util.BootstrapActions;
 import com.amazonaws.services.elasticmapreduce.util.BootstrapActions.Daemon;
+import com.amazonaws.services.elasticmapreduce.util.StepFactory;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -40,14 +41,9 @@ public class Deployer {
     private static final String stepname = "Step" + System.currentTimeMillis();
     
     private static final String mr_main_class = "org.adrian.WordCount";
-    private static final String mr_cmdline_arg1 = "s3n://poobar/hamlet111.txt";
-    private static final String mr_cmdline_arg2 = "s3://poobar/outputs/"+id + "/";
+    private static final String mr_cmdline_arg1 = "s3n://poobar/shak2.txt"; //input
+    private static final String mr_cmdline_arg2 = "s3://poobar/outputs/"+id + "/";  //output
     
-    private static final List<JobFlowExecutionState> DONE_STATES = Arrays
-            .asList(new JobFlowExecutionState[] { JobFlowExecutionState.COMPLETED,
-                                                 JobFlowExecutionState.FAILED,
-                                                 JobFlowExecutionState.TERMINATED });
-        
     public static void main(String[] args) {
 
         AWSCredentials credentials = new BasicAWSCredentials("AKIAJX23WFZA5737VMVQ", "3FhWX0tK8jWV7Lxi70OKy5R7AAF2VwxA3WTj7sf0");
@@ -90,8 +86,9 @@ public class Deployer {
 
     private static StepConfig stepConfig(final String stepname) {
         return new StepConfig()
-            //.withActionOnFailure("TERMINATE_JOB_FLOW")
-            .withActionOnFailure("CANCEL_AND_WAIT")
+            .withActionOnFailure("TERMINATE_JOB_FLOW")
+            //.withActionOnFailure("CANCEL_AND_WAIT")
+            .withHadoopJarStep(new StepFactory().newEnableDebuggingStep())
             .withHadoopJarStep(hadoopJarStepConfig(argumentsAsList(jobFlowName, stepname)))
             .withName(stepname);
     }
@@ -120,7 +117,7 @@ public class Deployer {
         
         return new RunJobFlowRequest()
             .withName(jobFlowName)            
-            //.withBootstrapActions(scriptAction("s3://elasticmapreduce/samples/spark/0.7.3/install-spark-shark.sh", null), jobTrackerHeapSizeAction(2048))
+            //.withBootstrapActions(scriptAction("s3://poobar/install-spark-shark.sh", null))
             .withInstances(jobFlowInstance())
             .withLogUri(s3_log_folder)
             .withSteps(asList(stepConfig(stepname)));
@@ -152,13 +149,13 @@ public class Deployer {
     
     private static JobFlowInstancesConfig jobFlowInstance() {
         JobFlowInstancesConfig conf = new JobFlowInstancesConfig()
-            .withInstanceCount(3)
+            .withInstanceCount(13)
             .withHadoopVersion("0.20.205")
-            //.withEc2KeyName("adrian")            
+            .withEc2KeyName("adrian")            
             .withKeepJobFlowAliveWhenNoSteps(false)
-            .withMasterInstanceType("m1.small")
+            .withMasterInstanceType("m1.large")
             .withPlacement(new PlacementType("us-east-1a"))
-            .withSlaveInstanceType("m1.small");
+            .withSlaveInstanceType("m1.large");
         return conf;
     }
     
@@ -193,5 +190,11 @@ public class Deployer {
             pause();
         } 
     }
+    
+    private static final List<JobFlowExecutionState> DONE_STATES = Arrays
+            .asList(new JobFlowExecutionState[] { JobFlowExecutionState.COMPLETED,
+                                                 JobFlowExecutionState.FAILED,
+                                                 JobFlowExecutionState.TERMINATED });
+        
     
 }
