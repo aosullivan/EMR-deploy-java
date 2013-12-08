@@ -43,13 +43,25 @@ COMPLETED
 For Amazon replication factor is 3 for a cluster of 10 or more nodes, 2 for a cluster 4-9 nodes, and 1 for a cluster with 3 or fewer nodes (same for us?)
 
 Upload 5GB
-local -> lab2 120mins
+local -> lab2 1h 53mins
+labs2 -> hdfs 2mins
 local -> s3   90 mins  (download about same)
 s3 -> hdfs    15 mins
 
+
 Wordcount for 
 12 large nodes = 6.5 minutes
+Job STARTING at Thu Dec 05 19:20:23 EST 2013
+Job RUNNING at Thu Dec 05 19:24:53 EST 2013
+Job SHUTTING_DOWN at Thu Dec 05 19:32:31 EST 2013
+
+
 6 medium nodes = 33 minutes (2 slots/instance)
-6 small nodes = 			(2 slots/instance)
-lab2 = 6pm started
+6 small nodes = 57 minutes	(2 slots/instance)
+lab1 = (1DN, 10 slots total = 11 mins)
+13/12/06 23:13:17 INFO mapred.JobClient: Running job: job_201312052151_0001
+13/12/06 23:13:18 INFO mapred.JobClient:  map 0% reduce 0%
+13/12/06 23:24:46 INFO mapred.JobClient: Job complete: job_201312052151_0001
+
+
 
