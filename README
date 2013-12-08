@@ -38,16 +38,14 @@ Configure shutdown action;
 COMPLETED
 
 
-
-
 For Amazon replication factor is 3 for a cluster of 10 or more nodes, 2 for a cluster 4-9 nodes, and 1 for a cluster with 3 or fewer nodes (same for us?)
 
 Upload 5GB
 local -> lab2 1h 53mins
 labs2 -> hdfs 2mins
 local -> s3   90 mins  (download about same)
-s3 -> hdfs    15 mins
-
+s3 -> hdfs 2 nodes   20 mins
+s3 -> hdfs 6 nodes   20 mins
 
 Wordcount for 
 12 large nodes = 6.5 minutes
@@ -55,13 +53,46 @@ Job STARTING at Thu Dec 05 19:20:23 EST 2013
 Job RUNNING at Thu Dec 05 19:24:53 EST 2013
 Job SHUTTING_DOWN at Thu Dec 05 19:32:31 EST 2013
 
-
-6 medium nodes = 33 minutes (2 slots/instance)
+EMR WITH S3 data:
 6 small nodes = 57 minutes	(2 slots/instance)
+6 medium nodes = 33, 26 minutes (2 slots/instance)
+6 large nodes = 12,12 mins
+
+EMR with HDFS data
+6 small = 38 mins
+6 medium = 16, 17 mins
+6 large nodes = 13, 12 minutes (6/instance)
+6 xlarge nodes = 6 mins
+
+ 6 xlarge costs same as 28 small... which performs better?
+28 small nodes = 
+
+2013-12-08 20:23:13,286 INFO org.apache.hadoop.mapred.JobClient (main): Running job: job_201312082010_0001
+2013-12-08 20:23:14,289 INFO org.apache.hadoop.mapred.JobClient (main):  map 0% reduce 0%
+2013-12-08 20:36:10,712 INFO org.apache.hadoop.mapred.JobClient (main): Job complete: job_201312082010_0001
+
+LAB
 lab1 = (1DN, 10 slots total = 11 mins)
 13/12/06 23:13:17 INFO mapred.JobClient: Running job: job_201312052151_0001
 13/12/06 23:13:18 INFO mapred.JobClient:  map 0% reduce 0%
 13/12/06 23:24:46 INFO mapred.JobClient: Job complete: job_201312052151_0001
 
 
+3 - small
+4 - medium
+5 -x large
+6 - many small
 
+
+
+http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/TaskConfiguration.html
+Amazon EC2 Instance Name	Mappers	Reducers
+m1.small	2	1
+m1.medium	2	1
+m1.large	4	2 (36 mappers total in fact, and a total of 10 reducers on 6 nodes)
+m1.xlarge	8	4
+
+
+
+NOTE - 1 physical node is V powerful...
+it is free version, can we do this?

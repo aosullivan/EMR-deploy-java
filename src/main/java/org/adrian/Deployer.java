@@ -41,15 +41,15 @@ public class Deployer {
     private static final String hdfs_input = "hfds://root/adrian";
     private static final String hdfs_output = "hfds://root/adrian/outputs";
     //private static final String mr_cmdline_arg1 = "s3n://poobar/shak2.txt"; //input
-    private static final String s3_input = "s3n://poobar/hamlet111.txt"; //input
+    private static final String s3_input = "s3n://poobar/shak2.txt"; //input
     private static final String s3_output = "s3://poobar/outputs/"+id + "/";  //output
     
     public static void main(String[] args) {
 
         AWSCredentials credentials = new BasicAWSCredentials("AKIAJX23WFZA5737VMVQ", "3FhWX0tK8jWV7Lxi70OKy5R7AAF2VwxA3WTj7sf0");
-        ClientConfiguration config = new ClientConfiguration()
-                                            .withProxyHost("surf-proxy.intranet.db.com")
-                                            .withProxyPort(8080);
+        ClientConfiguration config = new ClientConfiguration();
+                                            //.withProxyHost("surf-proxy.intranet.db.com")
+                                            //.withProxyPort(8080);
         
         AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);        
         
@@ -86,9 +86,9 @@ public class Deployer {
 
     private static List<StepConfig> steps() {
         List<StepConfig> steps = new LinkedList<StepConfig>();
-        steps.add(uploadStep());
+        //steps.add(uploadStep());
         steps.add(mapReduceStep());
-        steps.add(downloadStep());        
+        //steps.add(downloadStep());        
         return steps;
     }
 
@@ -104,7 +104,7 @@ public class Deployer {
     private static StepConfig mapReduceStep() {
         return  new StepConfig()
             .withActionOnFailure("TERMINATE_JOB_FLOW")
-            .withHadoopJarStep(hadoopJarStepConfig(s3_jar_file, argumentsAsList(s3_input, hdfs_output), mr_main_class))
+            .withHadoopJarStep(hadoopJarStepConfig(s3_jar_file, argumentsAsList(s3_input, s3_output), mr_main_class))
             .withName("MRStep" + System.currentTimeMillis());
     }
 
@@ -175,13 +175,13 @@ public class Deployer {
     
     private static JobFlowInstancesConfig jobFlowInstances() {
         JobFlowInstancesConfig conf = new JobFlowInstancesConfig()
-            .withInstanceCount(2)
+            .withInstanceCount(7)
             .withHadoopVersion("0.20.205")
             .withEc2KeyName("adrian")            
             .withKeepJobFlowAliveWhenNoSteps(false)
-            .withMasterInstanceType("m1.small")
+            .withMasterInstanceType("m1.large")
             .withPlacement(new PlacementType("us-east-1a"))
-            .withSlaveInstanceType("m1.small");
+            .withSlaveInstanceType("m1.large");
         return conf;
     }
     
