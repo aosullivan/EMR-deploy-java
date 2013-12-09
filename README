@@ -3,23 +3,12 @@ Wordcount Jar to be on S3 already, with a certain Main class (see implementation
 Input text file uploaded to S3.
 EC2 key has been generated with name 'adrian'
 
-Output goes to S3 and can be seen in the Amazon UI.
-
-Remove s3:// protocol on output folder (second commandline arg) to write to HDFS instead
-
-TODO
-run on lab and compare times to EMR
-run on HDFS and download data and compare times to S3
-reuse running instance (and start if not found)
-
 DATA LOCALITY/REDUNDANCY
 s3 input splits are read in multiple HTTP range requests. This is simply a way for HTTP to request a portion of the file instead of the 
 entire file (for example, GET FILE X Range: byte=0-10000). no need for replication 
 VM's can potentially be co-located on a single VM but this is statistically very unlikely due to size of cluster (.5 million)
 EBS (attached storage) is available but this does not exist on EMR instances (it does on beanstalk)
 HDFS: a cluster with 10 core nodes of type m1.large would have 2833 GB of space available to HDFS: ( 10 nodes x 850 GB per node ) / replication factor of 3.
-
-/home/hadoop/lib/emr-s3distcp-1.0.jar  --src s3://poobar/shak2.txt --dest /root/adrian
 
 
 PRESENTATION
@@ -47,42 +36,31 @@ local -> s3   90 mins  (download about same)
 s3 -> hdfs 2 nodes   20 mins
 s3 -> hdfs 6 nodes   20 mins
 
-Wordcount for 
-12 large nodes = 6.5 minutes
-Job STARTING at Thu Dec 05 19:20:23 EST 2013
-Job RUNNING at Thu Dec 05 19:24:53 EST 2013
-Job SHUTTING_DOWN at Thu Dec 05 19:32:31 EST 2013
-
 EMR WITH S3 data:
 6 small nodes = 57 minutes	(2 slots/instance)
 6 medium nodes = 33, 26 minutes (2 slots/instance)
 6 large nodes = 12,12 mins
+12 large nodes = 6.5  minutes
+12 xlarge = 4 mins
+
 
 EMR with HDFS data
 6 small = 38 mins
 6 medium = 16, 17 mins
 6 large nodes = 13, 12 minutes (6/instance)
-6 xlarge nodes = 6 mins
+6 xlarge nodes = 6, 7 mins
+12 xlarge 7 mins
+$0.480 per Hour, x7, 1 hour
 
- 6 xlarge costs same as 28 small... which performs better?
-28 small nodes = 
+13 small nodes with S3 = 32 mins
+13 small nodes with HDFS = 22 mins
 
-2013-12-08 20:23:13,286 INFO org.apache.hadoop.mapred.JobClient (main): Running job: job_201312082010_0001
-2013-12-08 20:23:14,289 INFO org.apache.hadoop.mapred.JobClient (main):  map 0% reduce 0%
-2013-12-08 20:36:10,712 INFO org.apache.hadoop.mapred.JobClient (main): Job complete: job_201312082010_0001
 
 LAB
 lab1 = (1DN, 10 slots total = 11 mins)
 13/12/06 23:13:17 INFO mapred.JobClient: Running job: job_201312052151_0001
 13/12/06 23:13:18 INFO mapred.JobClient:  map 0% reduce 0%
 13/12/06 23:24:46 INFO mapred.JobClient: Job complete: job_201312052151_0001
-
-
-3 - small
-4 - medium
-5 -x large
-6 - many small
-
 
 
 http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/TaskConfiguration.html
@@ -94,5 +72,5 @@ m1.xlarge	8	4
 
 
 
-NOTE - 1 physical node is V powerful...
+NOTE - 1 physical node is V powerful...vm's are more splittable
 it is free version, can we do this?

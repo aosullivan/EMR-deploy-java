@@ -175,13 +175,13 @@ public class Deployer {
     
     private static JobFlowInstancesConfig jobFlowInstances() {
         JobFlowInstancesConfig conf = new JobFlowInstancesConfig()
-            .withInstanceCount(7)
+            .withInstanceCount(13)
             .withHadoopVersion("0.20.205")
             .withEc2KeyName("adrian")            
             .withKeepJobFlowAliveWhenNoSteps(false)
-            .withMasterInstanceType("m1.large")
+            .withMasterInstanceType("m1.xlarge")
             .withPlacement(new PlacementType("us-east-1a"))
-            .withSlaveInstanceType("m1.large");
+            .withSlaveInstanceType("m1.xlarge");
         return conf;
     }
     
