@@ -11,10 +11,6 @@ EBS (attached storage) is available but this does not exist on EMR instances (it
 HDFS: a cluster with 10 core nodes of type m1.large would have 2833 GB of space available to HDFS: ( 10 nodes x 850 GB per node ) / replication factor of 3.
 
 
-PRESENTATION
-http://aws.amazon.com/elasticmapreduce/
-Amazon EMR pricing is per instance hour and starts at $.015 per instance hour for a small instance ($131.40 per year).
-
 STARTING 5 mins
 Cluster instances
 BOOTSTRAPPING 3 mins
@@ -58,16 +54,32 @@ $0.480 per Hour, x7, 1 hour
 
 LAB
 lab1 = (1DN, 10 slots total = 11 mins)
-13/12/06 23:13:17 INFO mapred.JobClient: Running job: job_201312052151_0001
-13/12/06 23:13:18 INFO mapred.JobClient:  map 0% reduce 0%
-13/12/06 23:24:46 INFO mapred.JobClient: Job complete: job_201312052151_0001
+
+
+Lab
+13/12/10 14:40:14 INFO mapred.JobClient:     Launched reduce tasks=1
+13/12/10 14:40:14 INFO mapred.JobClient:     Launched map tasks=41
+13/12/10 14:40:14 INFO mapred.JobClient:     Data-local map tasks=41
+
+
+12 x lar HDFS
+2013-12-09 03:30:51,942 INFO org.apache.hadoop.mapred.JobClient (main):     Launched reduce tasks=28
+2013-12-09 03:30:51,943 INFO org.apache.hadoop.mapred.JobClient (main):     Launched map tasks=46
+2013-12-09 03:30:51,943 INFO org.apache.hadoop.mapred.JobClient (main):     Data-local map tasks=39
+
+
+12 x small S3
+2013-12-09 02:07:45,353 INFO org.apache.hadoop.mapred.JobClient (main):     Launched reduce tasks=28
+2013-12-09 02:07:45,353 INFO org.apache.hadoop.mapred.JobClient (main):     Launched map tasks=52
+2013-12-09 02:07:45,354 INFO org.apache.hadoop.mapred.JobClient (main):     Data-local map tasks=40
+
 
 
 http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/TaskConfiguration.html
 Amazon EC2 Instance Name	Mappers	Reducers
 m1.small	2	1
 m1.medium	2	1
-m1.large	4	2 (36 mappers total in fact, and a total of 10 reducers on 6 nodes)
+m1.large	4	2 
 m1.xlarge	8	4
 
 

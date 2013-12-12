@@ -47,9 +47,9 @@ public class Deployer {
     public static void main(String[] args) {
 
         AWSCredentials credentials = new BasicAWSCredentials("AKIAJX23WFZA5737VMVQ", "3FhWX0tK8jWV7Lxi70OKy5R7AAF2VwxA3WTj7sf0");
-        ClientConfiguration config = new ClientConfiguration();
-                                            //.withProxyHost("surf-proxy.intranet.db.com")
-                                            //.withProxyPort(8080);
+        ClientConfiguration config = new ClientConfiguration()
+                                            .withProxyHost("surf-proxy.intranet.db.com")
+                                            .withProxyPort(8080);
         
         AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);        
         
@@ -179,7 +179,7 @@ public class Deployer {
             .withHadoopVersion("0.20.205")
             .withEc2KeyName("adrian")            
             .withKeepJobFlowAliveWhenNoSteps(false)
-            .withMasterInstanceType("m1.xlarge")
+            .withMasterInstanceType("m1.large")
             .withPlacement(new PlacementType("us-east-1a"))
             .withSlaveInstanceType("m1.xlarge");
         return conf;
