@@ -46,10 +46,11 @@ public class Deployer {
     
     public static void main(String[] args) {
 
-        AWSCredentials credentials = new BasicAWSCredentials("AKIAJX23WFZA5737VMVQ", "3FhWX0tK8jWV7Lxi70OKy5R7AAF2VwxA3WTj7sf0");
-        ClientConfiguration config = new ClientConfiguration()
-                                            .withProxyHost("surf-proxy.intranet.db.com")
-                                            .withProxyPort(8080);
+        AWSCredentials credentials = new BasicAWSCredentials();
+        
+        ClientConfiguration config = new ClientConfiguration();
+                                            //.withProxyHost("surf-proxy.intranet.db.com")
+                                            //.withProxyPort(8080);
         
         AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);        
         
