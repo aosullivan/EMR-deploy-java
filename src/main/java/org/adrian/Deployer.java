@@ -49,9 +49,7 @@ public class Deployer {
         AWSCredentials credentials = new BasicAWSCredentials();
         
         ClientConfiguration config = new ClientConfiguration();
-                                            //.withProxyHost("surf-proxy.intranet.db.com")
-                                            //.withProxyPort(8080);
-        
+
         AmazonElasticMapReduce service = new AmazonElasticMapReduceClient(credentials, config);        
         
         RunJobFlowResult result = service.runJobFlow(jobFlowRequest());
