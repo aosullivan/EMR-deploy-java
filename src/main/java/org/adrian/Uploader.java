@@ -15,14 +15,14 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 
 public class Uploader {
-    
+
     public static void main(String[] args) throws InterruptedException, IOException {
 
-        AWSCredentials credentials = new BasicAWSCredentials("AKIAJX23WFZA5737VMVQ", "3FhWX0tK8jWV7Lxi70OKy5R7AAF2VwxA3WTj7sf0");
-        ClientConfiguration config = new ClientConfiguration()
-                                            .withProxyHost("surf-proxy.intranet.db.com")
-                                            .withProxyPort(8080);
-        
+        //AWSCredentials credentials = new BasicAWSCredentials("","");
+        //ClientConfiguration config = new ClientConfiguration()
+        //                                    .withProxyHost("myproxy")
+        //                                    .withProxyPort(8080);
+
         upload(credentials, config);
     }
 
@@ -36,7 +36,7 @@ public class Uploader {
         AmazonS3Client conn = new AmazonS3Client(credentials, config);
         //conn.putObject(new PutObjectRequest(existingBucketName, keyName, file));
         PutObjectRequest request = new PutObjectRequest(existingBucketName, keyName, file);
-                
+
         TransferManager tm = new TransferManager(conn);
         //TransferManagerConfiguration tfc = new TransferManagerConfiguration();
         //System.err.println(tfc.getMinimumUploadPartSize());
@@ -46,22 +46,22 @@ public class Uploader {
 
         request.setGeneralProgressListener(new ProgressListener() {
             public void progressChanged(ProgressEvent event) {
-                if (event.getEventCode() > 0) 
-                    System.out.println("Transferred bytes: " + 
+                if (event.getEventCode() > 0)
+                    System.out.println("Transferred bytes: " +
                         event.getBytesTransferred() + " Code: " +  event.getEventCode());
             }
         });
-        
+
         Upload upload = tm.upload(request);
-        
+
         try {
             upload.waitForCompletion();
         } catch (AmazonClientException amazonClientException) {
             System.out.println("Unable to upload file, upload was aborted.");
             amazonClientException.printStackTrace();
         }
-        
-        
+
+
     }
 
 }
